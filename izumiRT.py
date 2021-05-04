@@ -36,7 +36,7 @@ def retweet_izumi(IDOL, LIMIT, max_id='', since='', until=''):
                 print(id)
                 api.retweet(id)
         except tweepy.TweepError as e:
-            print("リツイートの処理に失敗しちゃったみたい")
+            print("リツイートの処理に失敗しちゃったみたい。")
             print(e)
     return id
 
