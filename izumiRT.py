@@ -1,5 +1,6 @@
 import tweepy
 import datetime
+import time
 from config import *
 from pprint import pprint
 
@@ -15,26 +16,24 @@ def session_establish():
     return api
 
 
-def retweet_izumi(IDOL, LIMIT, max_id='', since='', until=''):
-    id = ''
-    IDOL = IDOL + ' -filter:retweets'
+def retweet_izumi(IDOL, LIMIT, since='', until='', result_type=''):
+    id = 0
     # セッションを確立し、アイドル名でつぶやきを最大数検索
     api = session_establish()
     try:
         egoistic_sailor = api.search(
-            q=IDOL, count=LIMIT, max_id=max_id, since=since, until=until)
+            q=IDOL, count=LIMIT, since=since, until=until, result_type=result_type)
     except tweepy.TweepError as e:
         api.update_status("検索に失敗しちゃったみたい。")
         print(e)
 
     for tweet in egoistic_sailor:
+        print(tweet.created_at)
         try:
-            id = tweet.id
-            if max_id == id:
-                continue
-            else:
-                print(id)
-                api.retweet(id)
+            if id < int(tweet.id):
+                id = tweet.id
+            api.retweet(tweet.id)
+            print('リツイートしたよ。')
         except tweepy.TweepError as e:
             print("リツイートの処理に失敗しちゃったみたい。")
             print(e)
@@ -45,13 +44,15 @@ def retweet_izumi(IDOL, LIMIT, max_id='', since='', until=''):
 IDOL_NAME = '大石泉'
 max_id = ''
 today = datetime.date.today().strftime('%Y-%m-%d')
-start_time = '_00:00:00_JST'
-end_time = '_23:59:59_JST'
-since = str(today) + start_time
-until = str(today) + end_time
+result_type = 'recent'  # 最新のつぶやきを取得
 
 while True:
-    max_id = retweet_izumi(IDOL_NAME, SEARCH_LIMIT_COUNT, max_id, since, until)
+    end_time = datetime.datetime.now()  # 現在時刻
+    start_time = end_time - datetime.timedelta(hours=1)  # 1時間前
+    since = str(today) + start_time.strftime('_%H:%M:%S_JST')
+    until = str(today) + end_time.strftime('_%H:%M:%S_JST')
 
-    if max_id == '':
-        break
+    time.sleep(30)
+    max_id = retweet_izumi(IDOL_NAME, SEARCH_LIMIT_COUNT,
+                           since, until, result_type)
+    print(max_id)
